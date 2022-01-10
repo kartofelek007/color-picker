@@ -1,5 +1,16 @@
+body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    margin: 0;
+    height: 100vh;
+    padding: 30px;
+    box-sizing: border-box;
+}
+
 .color {
     width: 300px;
+    box-sizing: border-box;
     border: 1px solid #eee;
     border-radius: 2px;
     padding: 5px;

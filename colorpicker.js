@@ -17,7 +17,8 @@ export class ColorPicker {
             initColor : "#ff0000",
             showLibrary : false,
             showButtonOK : false,
-            dynamic : false
+            dynamic : false,
+            libraryID : "colors"
         }, ...opts};
 
         this.el = document.createElement("div");
@@ -26,6 +27,8 @@ export class ColorPicker {
         this.color = this.options.initColor;
         this.onButtonClick = new PubSub();
         this.onColorSelect = new PubSub();
+        this.onColorsUpdate = new PubSub();
+
         place.append(this.el);
 
         this.hue = new HueSlider(this.el);
@@ -69,10 +72,13 @@ export class ColorPicker {
         })
 
         if (this.options.showLibrary) {
-            this.library = new Library(this.el, this.canvas);
+            this.library = new Library(this.el, this.options.libraryID, this.canvas);
             this.library.onColorSelect.on(color => {
                 this.input.value = color;
                 this.setColor(color);
+            });
+            this.library.onColorsChange.on(colors => {
+                this.onColorsUpdate.emit(colors);
             })
         }
 
@@ -89,5 +95,11 @@ export class ColorPicker {
         this.canvas.setColor(color);
         this.input.value = color;
         this.onColorSelect.emit(color);
+    }
+
+    updateLibrary() {
+        if (this.options.showLibrary) {
+            this.library.updateColors();
+        }
     }
 }

@@ -2,12 +2,14 @@ import { PubSub } from "./pubsub.js";
 import { rgb2hex } from "./functions.js";
 
 export class Library {
-    constructor(place, colorPicker) {
+    constructor(place, libraryID, colorPicker) {
         this.colorPicker = colorPicker;
+        this.libraryID = libraryID;
         this.place = place;
         this.onColorSelect = new PubSub();
         this.colors = [];
-        if (localStorage.getItem("colors")) this.colors = JSON.parse(localStorage.getItem("colors"));
+        this.onColorsChange = new PubSub();
+        if (localStorage.getItem(`picker-colors-${libraryID}`)) this.colors = JSON.parse(localStorage.getItem(`picker-colors-${libraryID}`));
         this.colorIndex = this.colors.length;
         this.createElement();
     }
@@ -49,14 +51,16 @@ export class Library {
         if (index) {
             this.colors.splice(index, 1);
         }
+        localStorage.setItem(`picker-colors-${this.libraryID}`, JSON.stringify(this.colors));
+        this.onColorsChange.emit(this.colors);
         this.createColors();
     }
 
     addColor(color) {
         this.colorIndex++;
         this.colors.push({index : this.colorIndex, color});
-        console.log(JSON.stringify(this.colors));
-        localStorage.setItem("colors", JSON.stringify(this.colors));
+        localStorage.setItem(`picker-colors-${this.libraryID}`, JSON.stringify(this.colors));
+        this.onColorsChange.emit(this.colors);
     }
 
     createColorElement(color, index = null) {
@@ -85,5 +89,10 @@ export class Library {
         })
 
         this.colorsDiv.append(el);
+    }
+
+    updateColors() {
+        if (localStorage.getItem(`picker-colors-${this.libraryID}`)) this.colors = JSON.parse(localStorage.getItem(`picker-colors-${this.libraryID}`));
+        this.createColors();
     }
 }
