@@ -99,6 +99,7 @@ export class ColorCanvas {
         this.dragEl.style.top = `${this.cursorPos.y}px`;
         this.color = this.getColor();
         this.dragEl.style.background = this.color.rgb;
+        this.onColorSelect.emit(this.color);
     }
 
     drag(e) {
@@ -108,6 +109,7 @@ export class ColorCanvas {
 
         this.cursorPos.y = Math.abs(y);
         this.cursorPos.x = Math.abs(x);
+
         if (this.cursorPos.x > this.canvas.width - 1) {
             this.cursorPos.x = this.canvas.width - 1;
         }
@@ -123,10 +125,12 @@ export class ColorCanvas {
             this.dragged = true;
             this.drag(e);
             disableSelect(true);
-        });
+        })
+
         document.addEventListener("mousemove", e => {
             if (this.dragged) this.drag(e);
         })
+
         document.addEventListener("mouseup", e => {
             this.dragged = false;
             disableSelect(false);

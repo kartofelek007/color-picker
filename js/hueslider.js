@@ -60,7 +60,7 @@ export class HueSlider {
     }
 
     getColor() {
-        const pixel = this.ctx.getImageData(this.cursorPos.x, this.cursorPos.y, 1,1).data;   // Read pixel Color
+        const pixel = this.ctx.getImageData(this.cursorPos.x, this.cursorPos.y, 1,1).data;
         const rgb = `rgb(${pixel[0]},${pixel[1]},${pixel[2]})`;
         return {
             rgb : rgb,

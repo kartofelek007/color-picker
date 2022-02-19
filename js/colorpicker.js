@@ -1,4 +1,4 @@
-import { HueSlider } from "./hue.js";
+import { HueSlider } from "./hueslider.js";
 import { ColorCanvas } from "./colorcanvas.js";
 import { rgb2hex, clamp, disableSelect } from "./functions.js";
 import { PubSub } from "./pubsub.js";
@@ -10,7 +10,7 @@ function parseHex(value) {
 }
 
 export class ColorPicker {
-    constructor(place, opts, initColor = "#ff0000") {
+    constructor(place, opts) {
         this.place = place;
 
         this.options = {...{
@@ -41,7 +41,6 @@ export class ColorPicker {
         this.input.addEventListener("keyup", e => {
             if (e.key === "Enter") {
                 if (parseHex(this.input.value)) {
-                    console.log(this.input.value);
                     this.setColor(`${this.input.value}`);
                 }
             }
@@ -83,10 +82,6 @@ export class ColorPicker {
         }
 
         this.setColor(this.color);
-    }
-
-    getElement() {
-        return this.el;
     }
 
     setColor(color) {
