@@ -454,7 +454,7 @@ const ColorPicker = (() => {
 
     const allPickers = {};
 
-    return class ColorPicker {
+    class ColorPicker {
         constructor(place, opts) {
             this.onButtonClick = new PubSub();
             this.onColorSelect = new PubSub();
@@ -546,5 +546,7 @@ const ColorPicker = (() => {
             console.log("up");
             this.library.updateColors();
         }
-    };
+    }
+
+    return ColorPicker;
 })();
