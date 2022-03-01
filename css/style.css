@@ -1,18 +1,3 @@
-body {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    margin: 0;
-    height: 100vh;
-    padding: 30px;
-    box-sizing: border-box;
-    background: #eee;
-    justify-items: center;
-    align-items: center;
-}
-
-
-/* color piker */
 .color {
     width: 300px;
     background: #fff;

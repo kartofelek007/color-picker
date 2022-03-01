@@ -1,17 +1,21 @@
 import { PubSub } from "./pubsub.js";
 import { rgb2hex } from "./functions.js";
 
-export class Library {
+export class ColorLibrary {
     constructor(place, libraryID, colorPicker) {
+        this.onColorSelect = new PubSub();
+        this.onColorsChange = new PubSub();
+
         this.colorPicker = colorPicker;
         this.libraryID = libraryID;
         this.place = place;
-        this.onColorSelect = new PubSub();
         this.colors = [];
-        this.onColorsChange = new PubSub();
-        if (localStorage.getItem(`picker-colors-${libraryID}`)) this.colors = JSON.parse(localStorage.getItem(`picker-colors-${libraryID}`));
-        this.colorIndex = this.colors.length;
+        this.readColorsFromStorage();
         this.createElement();
+    }
+
+    readColorsFromStorage() {
+        if (localStorage.getItem(`colorPicker-${this.libraryID}`)) this.colors = JSON.parse(localStorage.getItem(`colorPicker-${this.libraryID}`));
     }
 
     createElement() {
@@ -24,11 +28,10 @@ export class Library {
         btnAdd.textContent = "+";
         this.el.append(btnAdd);
 
-        btnAdd.addEventListener("click", e => {
+        btnAdd.addEventListener("click", () => {
             const color = this.colorPicker.getColor();
             const hex = rgb2hex(color.r, color.g, color.b);
             this.addColor(hex);
-            this.createColors();
         });
 
         this.colorsDiv = document.createElement("div");
@@ -41,40 +44,30 @@ export class Library {
 
     createColors() {
         this.colorsDiv.textContent = "";
-        this.colors.forEach(color => {
-            this.createColorElement(color.color, color.index);
-        })
+        this.colors.forEach(color => this.createColorElement(color));
     }
 
-    deleteColor(indexToDelete) {
-        const index = this.colors.findIndex(ob => ob.index === indexToDelete);
-        if (index) {
-            this.colors.splice(index, 1);
-        }
-        localStorage.setItem(`picker-colors-${this.libraryID}`, JSON.stringify(this.colors));
+    deleteColor(index) {
+        this.colors.splice(index, 1);
+        localStorage.setItem(`colorPicker-${this.libraryID}`, JSON.stringify(this.colors));
         this.onColorsChange.emit(this.colors);
         this.createColors();
     }
 
     addColor(color) {
-        this.colorIndex++;
-        this.colors.push({index : this.colorIndex, color});
-        localStorage.setItem(`picker-colors-${this.libraryID}`, JSON.stringify(this.colors));
+        this.colors.push(color);
+        localStorage.setItem(`colorPicker-${this.libraryID}`, JSON.stringify(this.colors));
+        this.createColors();
         this.onColorsChange.emit(this.colors);
     }
 
-    createColorElement(color, index = null) {
-        if (index === null) {
-            index = ++this.colorIndex;
-        }
-
+    createColorElement(color) {
         const el = document.createElement("div");
-        el.dataset.index = index;
         el.classList.add("color-library-el");
         el.style.background = color;
-        el.addEventListener("click", e => {
+        el.addEventListener("click", () => {
             this.onColorSelect.emit(color);
-        })
+        });
 
         const elDel = document.createElement("button");
         elDel.classList.add("color-library-el-delete");
@@ -85,14 +78,22 @@ export class Library {
         elDel.addEventListener("click", e => {
             e.preventDefault();
             e.stopPropagation();
-            this.deleteColor(index)
-        })
+
+            const elements = [...this.colorsDiv.querySelectorAll(".color-library-el")];
+            const index = elements.indexOf(el);
+            if (index !== -1) {
+                this.deleteColor(index);
+            }
+        });
 
         this.colorsDiv.append(el);
     }
 
     updateColors() {
-        if (localStorage.getItem(`picker-colors-${this.libraryID}`)) this.colors = JSON.parse(localStorage.getItem(`picker-colors-${this.libraryID}`));
+        if (localStorage.getItem(`colorPicker-${this.libraryID}`)) {
+            this.colors = JSON.parse(localStorage.getItem(`colorPicker-${this.libraryID}`));
+        }
+        console.log(this.libraryID, this.colors);
         this.createColors();
     }
 }
