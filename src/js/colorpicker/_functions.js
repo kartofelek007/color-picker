@@ -14,6 +14,10 @@ export function normalize(val, max, min) {
     return (val - min) / (max - min);
 }
 
+export function convertRange(value, r1, r2) {
+    return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0];
+}
+
 export function hex2rgb(hex) {
     hex = parseInt(hex.indexOf('#') > -1 ? hex.substring(1) : hex, 16);
     return {
@@ -41,7 +45,7 @@ export function rgb2hsl(r, g, b) {
     let s;
     const l = (max + min) / 2;
 
-    if (max == min) {
+    if (max === min) {
         h = s = 0; // achromatic
     } else {
         const d = max - min;
@@ -60,13 +64,17 @@ export function rgb2hsl(r, g, b) {
         h /= 6;
     }
 
-    return [h, s, l];
+    return {
+        h,
+        s,
+        l
+    };
 }
 
 export function hsl2rgb(h, s, l) {
     let r, g, b;
 
-    if (s == 0) {
+    if (s === 0) {
         r = g = b = l; // achromatic
     } else {
         const hue2rgb = function hue2rgb(p, q, t) {
@@ -84,7 +92,11 @@ export function hsl2rgb(h, s, l) {
         g = hue2rgb(p, q, h);
         b = hue2rgb(p, q, h - 1 / 3);
     }
-    return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+    return {
+        r: Math.round(r * 255),
+        g: Math.round(g * 255),
+        b: Math.round(b * 255)
+    };
 }
 
 export function hex2hsb(hex) {

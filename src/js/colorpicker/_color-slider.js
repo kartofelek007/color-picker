@@ -9,7 +9,7 @@ export class ColorSlider {
 
     constructor(place) {
         this.onColorSelect = new Signal();
-        
+
         this.#DOM = {};
 
         this.#DOM.place = place;
@@ -44,11 +44,11 @@ export class ColorSlider {
 
         // potem pionowy gradient, od białego do przezroczystego
         this.#DOM.ctx.fillRect(0, 0, this.#DOM.canvas.width, this.#DOM.canvas.height);
-        
+
         let gradientH = this.#DOM.ctx.createLinearGradient(0, 0, this.#DOM.canvas.width, 0);
         gradientH.addColorStop(0.01, "#fff");
         gradientH.addColorStop(0.99, "rgba(255,255,255, 0)");
-        
+
         this.#DOM.ctx.fillStyle = gradientH;
         this.#DOM.ctx.fillRect(0, 0, this.#DOM.canvas.width, this.#DOM.canvas.height);
 
@@ -65,6 +65,7 @@ export class ColorSlider {
         this.#DOM.dragEl.style.top = `${this.#cursorPos.y}px`;
         this.#color = this.getColor();
         this.#DOM.dragEl.style.background = this.#color.rgb;
+        this.onColorSelect.emit(this.#color);
     }
 
     #drag(e) {
@@ -102,13 +103,17 @@ export class ColorSlider {
     }
 
     setColor(color) {
-        this.#color = color;
         this.#setBgGradient(color);
 
         const hsb = rgb2hsb(color);
         const x = clamp(Math.ceil(hsb.s / (100 / this.#DOM.canvas.width)), 0, this.#DOM.canvas.width - 1);
         const y = clamp(this.#DOM.canvas.height - Math.ceil(hsb.b / (100 / this.#DOM.canvas.height)), 0, this.#DOM.canvas.height);
         this.#cursorPos = {x, y};
+        this.#updatePickerColor();
+    }
+
+    setHue(color) {
+        this.#setBgGradient(color);
         this.#updatePickerColor();
     }
 

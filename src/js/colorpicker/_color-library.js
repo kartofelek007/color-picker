@@ -2,7 +2,6 @@ import {Signal} from "./_signals.js";
 import {rgb2hex} from "./_functions.js";
 
 export class ColorLibrary {
-    #colorPicker
     #libraryID
     #DOM
     #colors
@@ -13,7 +12,7 @@ export class ColorLibrary {
         this.onColorsChange = new Signal();
 
         this.#DOM = {}
-        
+
         this.#DOM.colorPicker = colorPicker;
         this.#libraryID = libraryID;
         this.#DOM.place = place;

@@ -6,7 +6,7 @@ export class OpacitySlider {
     #color
     #cursorPos
     #DOM
-    
+
     constructor(place, color = {r: 0, g: 0, b: 0, a: 0}) {
         this.onOpacitySelect = new Signal();
 
@@ -44,9 +44,10 @@ export class OpacitySlider {
     }
 
     #setBgGradient() {
+        this.#DOM.ctx.clearRect(0, 0, this.#DOM.canvas.width, this.#DOM.canvas.height);
         const gradient = this.#DOM.ctx.createLinearGradient(0, 0, 0, this.#DOM.canvas.height);
-        gradient.addColorStop(0, `rgba(${this.#color.r},${this.#color.g},${this.#color.b},1)`);
-        gradient.addColorStop(1, `rgba(${this.#color.r},${this.#color.g},${this.#color.b},0)`);
+        gradient.addColorStop(0, `rgba(${this.#color.r}, ${this.#color.g}, ${this.#color.b}, 1)`);
+        gradient.addColorStop(1, `rgba(${this.#color.r}, ${this.#color.g}, ${this.#color.b}, 0)`);
         this.#DOM.ctx.fillStyle = gradient;
         this.#DOM.ctx.fillRect(0, 0, this.#DOM.canvas.width, this.#DOM.canvas.height);
     }
@@ -71,16 +72,12 @@ export class OpacitySlider {
 
         let y = clamp(e.pageY - (g.top + window.scrollY), 0, g.height);
         this.#cursorPos.y = Math.abs(y);
-        
-        if (this.#cursorPos.y > this.#DOM.canvas.height - 1) {
-            this.#cursorPos.y = this.#DOM.canvas.height - 1;
-        }
-
         this.#cursorPos.x = g.width / 2;
 
-        const color = this.getOpacity();
+        const opacity = this.getOpacity();
+
         this.#DOM.dragEl.style.top = `${y}px`;
-        this.onOpacitySelect.emit(color);
+        this.onOpacitySelect.emit(opacity);
     }
 
     setColor(color) {
@@ -97,8 +94,6 @@ export class OpacitySlider {
     }
 
     getOpacity() {
-        const pixel = this.#DOM.ctx.getImageData(0, this.#cursorPos.y, 1, 1).data;
-        const x = pixel[3];
-        return Number(normalize(x, 255, 0).toFixed(2));
+        return +Number(1 - Number(normalize(this.#cursorPos.y, this.#DOM.canvas.height, 0))).toFixed(2);
     }
 }

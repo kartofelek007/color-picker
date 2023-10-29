@@ -8,7 +8,7 @@ import {ColorPicker} from "./colorpicker/colorpicker.js";
         inputVisible: false
     });
 
-    cp.onColorSelect.on(color =>  console.log(`colorpicker1:`, color));
+    //cp.onColorSelect.on(color =>  console.log(`colorpicker1:`, color));
     cp.setColorHEX("#0000ff")
 }
 
@@ -20,6 +20,7 @@ import {ColorPicker} from "./colorpicker/colorpicker.js";
         inputVisible: true
     });
 
-    cp.onColorSelect.on(color => console.log(`colorpicker2:`, color));
-    cp.setColorObj({r: 255, g: 0, b: 0, a: 0.2});
+    //cp.onColorSelect.on(color => console.log(`colorpicker2:`, color));
+    //cp.setColorObj({r: 255, g: 0, b: 0, a: 0.2});
+    cp.setColorHEX("#ff00ff")
 }

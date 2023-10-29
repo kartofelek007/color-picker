@@ -2,7 +2,7 @@ import "./css/style.scss";
 
 import {ColorSlider} from "./_color-slider.js";
 import {HueSlider} from "./_hue-slider.js";
-import {hex2rgba, rgb2hex} from "./_functions.js";
+import {convertRange, hex2rgba, rgb2hex} from "./_functions.js";
 import {Signal} from "./_signals.js";
 import {ColorLibrary} from "./_color-library.js";
 import {OpacitySlider} from "./_opacity-slider.js";
@@ -21,21 +21,35 @@ export class ColorPicker {
         this.onOpacitySelect = new Signal();
         this.#DOM = {}
         this.#DOM.place = place;
-        this.#color = "#FF0000";
+        this.#color = {r: 255, g: 0, b: 0, a: 1};
 
         this.#options = {
             ...{
                 libraryID: "colors",
-                inputVisible : true,
-                libraryVisible : true,
+                inputVisible: true,
+                libraryVisible: true,
             }, ...opts
         };
 
         this.#createElement();
-        this.setColorHEX(this.#color);
+        this.#updateInputValue();
 
         if (allPickers[this.#options.libraryID] === undefined) allPickers[this.#options.libraryID] = [];
         allPickers[this.#options.libraryID].push(this);
+    }
+
+    #updateInputValue() {
+        if (!this.#options.inputVisible) return;
+        let opacity = "";
+        const hex = rgb2hex(this.#color.r, this.#color.g, this.#color.b);
+        if (this.#color.a !== 1 && this.#color.a !== 0) {
+            const opa = parseInt(convertRange(this.#color.a, [0, 1], [0, 255]))
+            opacity = Number(opa).toString(16).toUpperCase();
+        }
+        if (this.#color.a === 0) {
+            opacity = "00";
+        }
+        this.#DOM.input.value = hex + opacity
     }
 
     #createElement() {
@@ -51,6 +65,7 @@ export class ColorPicker {
         //tworzę input
         if (this.#options.inputVisible) {
             this.#createInput();
+            this.#createInputOpacity();
         }
 
         if (this.#options.libraryVisible) {
@@ -58,21 +73,27 @@ export class ColorPicker {
         }
 
         this.#DOM.hueSlider.onHueSelect.on(color => {
-            this.#DOM.colorSlider.setColor(color);
+            this.#DOM.colorSlider.setHue(color);
             this.onHueSelect.emit(color);
+            this.#color = {...this.#color, ...color};
+            this.#DOM.opacitySlider.setColor(this.#color);
+            this.onColorSelect.emit(this.#color);
         });
 
         this.#DOM.opacitySlider.onOpacitySelect.on(opacity => {
             this.#color.a = opacity;
             this.onOpacitySelect.emit({color: this.#color, opacity});
             this.onColorSelect.emit(this.#color);
+            this.#updateInputValue();
+            if (this.#options.inputVisible) {
+                this.#DOM.inputOpacity.value = opacity;
+            }
         });
 
         this.#DOM.colorSlider.onColorSelect.on(color => {
-            const hex = rgb2hex(color.r, color.g, color.b);
             color.a = this.#DOM.opacitySlider.getOpacity();
             this.#color = color;
-            if (this.#options.inputVisible) this.#DOM.input.value = hex;
+            this.#updateInputValue()
             this.onColorSelect.emit(color);
         });
     }
@@ -94,8 +115,28 @@ export class ColorPicker {
                     const val = this.#DOM.input.value;
                     const hex = val.substring(0, val.length - 2);
                     const opacity = parseInt(val.substring(val.length - 2), 16);
-                    const rgba = hex2rgba(hex, opacity)
+                    const opa = Number(convertRange(opacity, [0, 255], [0, 1])).toFixed(2);
+                    const rgba = hex2rgba(hex, opa)
                     this.setColorObj(rgba);
+                }
+            }
+        });
+    }
+
+    #createInputOpacity() {
+        this.#DOM.inputOpacity = document.createElement("input");
+        this.#DOM.inputOpacity.classList.add("colorpicker-input-opacity");
+        this.#DOM.el.append(this.#DOM.inputOpacity);
+
+        //po wpisaniu koloru do inputa sprawdzam czy jest on w poprawnym formacie
+        //i w razie czego aktualizuję kolor w sliderach
+        this.#DOM.inputOpacity.addEventListener("keyup", e => {
+            if (e.key === "Enter") {
+                const val = this.#DOM.inputOpacity.value;
+                if (!isNaN(Number(val)) && Number(val) <= 100 && Number(val) >= 0) {
+                    this.#color.a = Number(val);
+                    this.#DOM.opacitySlider.setOpacity(val);
+                    this.#updateInputValue();
                 }
             }
         });
@@ -121,18 +162,20 @@ export class ColorPicker {
         const rgba = hex2rgba(color);
         this.#color = rgba;
         this.#DOM.hueSlider.setColor(rgba);
+        this.#DOM.opacitySlider.setColor(rgba);
         this.#DOM.opacitySlider.setOpacity(1);
         this.#DOM.colorSlider.setColor(rgba);
-        if (this.#options.inputVisible) this.#DOM.input.value = color;
+        if (this.#options.inputVisible) this.#updateInputValue();
     }
 
     setColorObj(color) {
         this.#color = color;
         this.#DOM.hueSlider.setColor(color);
         this.#DOM.opacitySlider.setColor(color);
+        this.#DOM.opacitySlider.setColor(color);
         this.#DOM.opacitySlider.setOpacity(color.a);
         this.#DOM.colorSlider.setColor(color);
-        if (this.#options.inputVisible) this.#DOM.input.value = rgb2hex(color.r, color.g, color.b);
+        if (this.#options.inputVisible) this.#updateInputValue();
     }
 
     updateLibrary() {

@@ -5,12 +5,12 @@ export class HueSlider {
     #dragged
     #cursorPos
     #DOM
-    
+
     constructor(place) {
         this.onHueSelect = new Signal();
 
         this.#DOM = {}
-        
+
         this.#DOM.place = place; //miejsce, do którego wrzucimy element
         this.#dragged = false; //czy rozpoczęto przeciąganie suwaka
         this.#cursorPos = {x: 0, y: 0}; //pozycja wskaźnika
@@ -93,7 +93,7 @@ export class HueSlider {
     setColor(color) {
         const hslColor = rgb2hsl(color.r, color.g, color.b);
 
-        const hue = hslColor[0] * 360;
+        const hue = hslColor.h * 360;
         const percent = hue / 360 * 100;
 
         this.#cursorPos.y = Math.round(this.#DOM.canvas.height * percent / 100);
