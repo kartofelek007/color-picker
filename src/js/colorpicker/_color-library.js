@@ -7,13 +7,14 @@ export class ColorLibrary {
     #colors
     #colorsDiv
 
-    constructor(place, libraryID, colorPicker) {
+    constructor(place, libraryID, colorPicker, opacityPicker) {
         this.onColorSelect = new Signal();
         this.onColorsChange = new Signal();
 
         this.#DOM = {}
 
         this.#DOM.colorPicker = colorPicker;
+        this.#DOM.opacityPicker = opacityPicker;
         this.#libraryID = libraryID;
         this.#DOM.place = place;
         this.#colors = [];
@@ -37,7 +38,8 @@ export class ColorLibrary {
 
         btnAdd.addEventListener("click", () => {
             const color = this.#DOM.colorPicker.getColor();
-            const hex = rgb2hex(color.r, color.g, color.b);
+            const opacity = this.#DOM.opacityPicker.getOpacity() * 255;
+            const hex = rgb2hex(color.r, color.g, color.b, opacity);
             this.addColor(hex);
         });
 
@@ -51,16 +53,23 @@ export class ColorLibrary {
 
     #createColors() {
         this.#colorsDiv.textContent = "";
-        this.#colors.forEach(color => this.#createColorElement(color));
+        this.#colors.forEach(color => {
+            console.log(color);
+            this.#createColorElement(color)
+        });
     }
 
     #createColorElement(color) {
         const el = document.createElement("div");
         el.classList.add("colorpicker-library-el");
-        el.style.background = color;
         el.addEventListener("click", () => {
             this.onColorSelect.emit(color);
         });
+
+        const inside = document.createElement("div");
+        inside.classList.add("colorpicker-library-el-inside");
+        inside.style.backgroundColor = color;
+        el.append(inside);
 
         const elDel = document.createElement("button");
         elDel.classList.add("colorpicker-library-el-delete");

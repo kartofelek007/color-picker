@@ -61,11 +61,10 @@ export class ColorSlider {
     }
 
     #updatePickerColor() {
+        this.#color = this.getColor();
         this.#DOM.dragEl.style.left = `${this.#cursorPos.x}px`;
         this.#DOM.dragEl.style.top = `${this.#cursorPos.y}px`;
-        this.#color = this.getColor();
         this.#DOM.dragEl.style.background = this.#color.rgb;
-        this.onColorSelect.emit(this.#color);
     }
 
     #drag(e) {
@@ -83,7 +82,6 @@ export class ColorSlider {
 
         this.#color = this.getColor();
         this.#updatePickerColor();
-
         this.onColorSelect.emit(this.#color);
     }
 
@@ -104,7 +102,6 @@ export class ColorSlider {
 
     setColor(color) {
         this.#setBgGradient(color);
-
         const hsb = rgb2hsb(color);
         const x = clamp(Math.ceil(hsb.s / (100 / this.#DOM.canvas.width)), 0, this.#DOM.canvas.width - 1);
         const y = clamp(this.#DOM.canvas.height - Math.ceil(hsb.b / (100 / this.#DOM.canvas.height)), 0, this.#DOM.canvas.height);

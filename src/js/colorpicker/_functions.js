@@ -6,8 +6,14 @@ export function disableSelect(disable = false) {
     document.body.style.userSelect = disable ? 'none' : 'auto';
 }
 
-export function rgb2hex(r, g, b) {
-    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+export function rgb2hex(r, g, b, a = 1) {
+    const color = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    let alpha = "";
+    if (a === 0) alpha = "00";
+    if (a !== 1) {
+        alpha = parseInt(a, 16);
+    }
+    return color + alpha;
 }
 
 export function normalize(val, max, min) {
@@ -18,26 +24,32 @@ export function convertRange(value, r1, r2) {
     return (value - r1[0]) * (r2[1] - r2[0]) / (r1[1] - r1[0]) + r2[0];
 }
 
-export function hex2rgb(hex) {
-    hex = parseInt(hex.indexOf('#') > -1 ? hex.substring(1) : hex, 16);
-    return {
-        r: hex >> 16,
-        g: (hex & 0x00ff00) >> 8,
-        b: hex & 0x0000ff,
-    };
-}
+export function hex2rgba(hex) {
+    if (!/^#[a-f0-9]{6}$/i.test(hex) && !/^#[a-f0-9]{8}$/i.test(hex)) {
+        return false;
+    }
 
-export function hex2rgba(hex, alpha = 1) {
-    hex = parseInt(hex.indexOf('#') > -1 ? hex.substring(1) : hex, 16);
+    let alpha = "";
+
+    if (/^#[a-f0-9]{8}$/i.test(hex)) {
+        alpha = parseInt(hex.slice(-2), 16);
+        alpha = convertRange(alpha, [0, 255], [0, 1])
+        hex = hex.substring(0, hex.length - 2);
+    }
+
+    hex = hex.substring(1);
+
+    const hexText = parseInt(hex, 16);
+
     return {
-        r: hex >> 16,
-        g: (hex & 0x00ff00) >> 8,
-        b: hex & 0x0000ff,
+        r: hexText >> 16,
+        g: (hexText & 0x00ff00) >> 8,
+        b: hexText & 0x0000ff,
         a: alpha
     };
 }
 
-export function rgb2hsl(r, g, b) {
+export function rgb2hsl(r, g, b, alpha = 1) {
     (r /= 255), (g /= 255), (b /= 255);
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
@@ -67,7 +79,8 @@ export function rgb2hsl(r, g, b) {
     return {
         h,
         s,
-        l
+        l,
+        a: alpha
     };
 }
 
