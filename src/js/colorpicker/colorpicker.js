@@ -28,19 +28,23 @@ export class ColorPicker {
                 libraryID: "colors",
                 inputVisible: true,
                 libraryVisible: true,
+                opacityColors: true
             }, ...opts
         };
 
         this.#createElement();
         this.#updateInputValue();
-        this.setColorObj(this.#color)
+        //this.setColorObj(this.#color, false)
 
         if (allPickers[this.#options.libraryID] === undefined) allPickers[this.#options.libraryID] = [];
         allPickers[this.#options.libraryID].push(this);
     }
 
     #makeColorToEmit() {
-        const c = this.#color;
+        const c = {...this.#color};
+        if (!this.#options.opacityColors) {
+            c.a = 1;
+        }
         return {
             rgb : {r: c.r, g: c.g, b: c.b},
             rgba : {r: c.r, g: c.g, b: c.b, a: c.a},
@@ -51,32 +55,34 @@ export class ColorPicker {
 
     #updateInputValue() {
         if (!this.#options.inputVisible) return;
-        let opacity = "";
-        const hex = rgb2hex(this.#color.r, this.#color.g, this.#color.b, this.#color.a);
-        if (this.#color.a !== 1 && this.#color.a !== 0) {
-            const opa = parseInt(convertRange(this.#color.a, [0, 1], [0, 255]))
-            opacity = Number(opa).toString(16).toUpperCase();
+        let opacity = this.#color.a;
+        if (!this.#options.opacityColors) {
+            opacity = 1;
         }
-        if (this.#color.a === 0) {
-            opacity = "00";
-        }
-        this.#DOM.input.value = hex + opacity
+        const hex = rgb2hex(this.#color.r, this.#color.g, this.#color.b, opacity);
+        this.#DOM.input.value = hex.toUpperCase();
     }
 
     #createElement() {
         this.#DOM.el = document.createElement("div");
         this.#DOM.el.classList.add("colorpicker");
-
         this.#DOM.place.append(this.#DOM.el);
 
         this.#DOM.hueSlider = new HueSlider(this.#DOM.el);
-        this.#DOM.opacitySlider = new OpacitySlider(this.#DOM.el);
         this.#DOM.colorSlider = new ColorSlider(this.#DOM.el);
+
+        if (this.#options.opacityColors) {
+            this.#DOM.opacitySlider = new OpacitySlider(this.#DOM.el);
+        } else {
+            this.#DOM.el.classList.add("is-no-opacity");
+        }
 
         //tworzę input
         if (this.#options.inputVisible) {
             this.#createInput();
-            this.#createInputOpacity();
+            if (this.#options.opacityColors) {
+                this.#createInputOpacity();
+            }
         }
 
         if (this.#options.libraryVisible) {
@@ -87,24 +93,43 @@ export class ColorPicker {
             this.#DOM.colorSlider.setHue(color);
             this.onHueSelect.emit(color);
             this.#color = {...this.#color, ...color};
-            this.#DOM.opacitySlider.setColor(this.#color);
+            if (this.#options.opacityColors) {
+                this.#DOM.opacitySlider.setColor(this.#color);
+            }
+            if (this.#options.inputVisible) {
+                this.#updateInputValue();
+            }
+            this.emitColorSelect();
         });
 
-        this.#DOM.opacitySlider.onOpacitySelect.on(opacity => {
-            this.#color.a = opacity;
-            this.onOpacitySelect.emit({color: this.#color, opacity});
-            this.#updateInputValue();
-            if (this.#options.inputVisible) {
-                this.#DOM.inputOpacity.value = opacity;
-            }
-        });
+        if (this.#options.opacityColors) {
+            this.#DOM.opacitySlider.onOpacitySelect.on(opacity => {
+                this.#color.a = opacity;
+                this.onOpacitySelect.emit({color: this.#color, opacity});
+                if (this.#options.inputVisible) {
+                    if (this.#options.opacityColors) {
+                        this.#DOM.inputOpacity.value = opacity;
+                    }
+                    this.#updateInputValue();
+                }
+                this.emitColorSelect();
+            });
+        }
 
         this.#DOM.colorSlider.onColorSelect.on(color => {
-            color.a = this.#DOM.opacitySlider.getOpacity();
+            if (this.#options.opacityColors) {
+                color.a = this.#DOM.opacitySlider.getOpacity();
+            } else {
+                color.a = 1;
+            }
             this.#color = color;
-            this.#DOM.opacitySlider.setColor(this.#color);
-            this.#updateInputValue()
-            this.onColorSelect.emit(this.#makeColorToEmit());
+            if (this.#options.opacityColors) {
+                this.#DOM.opacitySlider.setColor(this.#color);
+            }
+            if (this.#options.inputVisible) {
+                this.#updateInputValue();
+            }
+            this.emitColorSelect();
         });
     }
 
@@ -128,18 +153,8 @@ export class ColorPicker {
 
         this.#DOM.input.onkeyup = e => {
             if (e.key === "Enter") {
-                if (/^#[a-f0-9]{6}$/i.test(this.#DOM.input.value)) {
+                if (/^#[a-f0-9]{6}$/i.test(this.#DOM.input.value) || /^#[a-f0-9]{8}$/i.test(this.#DOM.input.value)) {
                     this.setColorHEX(`${this.#DOM.input.value}`);
-                    this.#DOM.input[s] = this.#DOM.input.value;
-                }
-
-                if (/^#[a-f0-9]{8}$/i.test(this.#DOM.input.value)) {
-                    const val = this.#DOM.input.value;
-                    const hex = val.substring(0, val.length - 2);
-                    const opacity = parseInt(val.substring(val.length - 2), 16);
-                    const opa = Number(convertRange(opacity, [0, 255], [0, 1])).toFixed(2);
-                    const rgba = hex2rgba(hex, opa)
-                    this.setColorObj(rgba);
                     this.#DOM.input[s] = this.#DOM.input.value;
                 }
             }
@@ -166,7 +181,7 @@ export class ColorPicker {
     }
 
     #createLibrary() {
-        this.#DOM.library = new ColorLibrary(this.#DOM.el, this.#options.libraryID, this.#DOM.colorSlider, this.#DOM.opacitySlider);
+        this.#DOM.library = new ColorLibrary(this.#DOM.el, this.#options.libraryID, this.#DOM.colorSlider, this.#color);
         this.#DOM.library.onColorSelect.on(color => {
             if (this.#options.inputVisible) this.#DOM.input.value = color;
             this.setColorHEX(color);
@@ -181,26 +196,29 @@ export class ColorPicker {
         });
     }
 
-    setColorHEX(color) {
+    setColorHEX(color, emit = true) {
         let rgba = hex2rgba(color);
         this.#color = rgba;
-        this.#DOM.hueSlider.setColor(rgba);
-        this.#DOM.opacitySlider.setColor(rgba);
-        this.#DOM.opacitySlider.setOpacity(rgba.a);
-        this.#DOM.colorSlider.setColor(rgba);
+        this.#DOM.hueSlider.setColor(rgba, false);
+        if (this.#options.opacityColors) {
+            this.#DOM.opacitySlider.setColor(rgba, false);
+            this.#DOM.opacitySlider.setOpacity(rgba.a, false);
+        }
+        this.#DOM.colorSlider.setColor(rgba, false);
         if (this.#options.inputVisible) this.#updateInputValue();
-        this.emitColorSelect();
+        if (emit) this.emitColorSelect();
     }
 
-    setColorObj(color) {
+    setColorObj(color, emit = true) {
         this.#color = color;
-        this.#DOM.hueSlider.setColor(color);
-        this.#DOM.opacitySlider.setColor(color);
-        this.#DOM.opacitySlider.setColor(color);
-        this.#DOM.opacitySlider.setOpacity(color.a);
-        this.#DOM.colorSlider.setColor(color);
+        this.#DOM.hueSlider.setColor(color, false);
+        if (this.#options.opacityColors) {
+            this.#DOM.opacitySlider.setColor(color, false);
+            this.#DOM.opacitySlider.setOpacity(color.a, false);
+        }
+        this.#DOM.colorSlider.setColor(color, false);
         if (this.#options.inputVisible) this.#updateInputValue();
-        this.emitColorSelect();
+        if (emit) this.emitColorSelect();
     }
 
     getCurrentColor() {

@@ -7,14 +7,12 @@ export class ColorLibrary {
     #colors
     #colorsDiv
 
-    constructor(place, libraryID, colorPicker, opacityPicker) {
+    constructor(place, libraryID, colorPicker, currentColor) {
         this.onColorSelect = new Signal();
         this.onColorsChange = new Signal();
-
         this.#DOM = {}
-
         this.#DOM.colorPicker = colorPicker;
-        this.#DOM.opacityPicker = opacityPicker;
+        this.currentColor = currentColor;
         this.#libraryID = libraryID;
         this.#DOM.place = place;
         this.#colors = [];
@@ -38,7 +36,7 @@ export class ColorLibrary {
 
         btnAdd.addEventListener("click", () => {
             const color = this.#DOM.colorPicker.getColor();
-            const opacity = this.#DOM.opacityPicker.getOpacity() * 255;
+            const opacity = this.currentColor * 255;
             const hex = rgb2hex(color.r, color.g, color.b, opacity);
             this.addColor(hex);
         });
@@ -46,7 +44,6 @@ export class ColorLibrary {
         this.#colorsDiv = document.createElement("div");
         this.#colorsDiv.classList.add("colorpicker-library-colors");
         this.#DOM.el.append(this.#colorsDiv);
-
         this.#DOM.place.append(this.#DOM.el);
         this.#createColors();
     }
@@ -54,7 +51,6 @@ export class ColorLibrary {
     #createColors() {
         this.#colorsDiv.textContent = "";
         this.#colors.forEach(color => {
-            console.log(color);
             this.#createColorElement(color)
         });
     }

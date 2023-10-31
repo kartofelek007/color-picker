@@ -2,16 +2,13 @@ export function clamp(nr, min, max) {
     return Math.min(Math.max(nr, min), max);
 }
 
-export function disableSelect(disable = false) {
-    document.body.style.userSelect = disable ? 'none' : 'auto';
-}
-
 export function rgb2hex(r, g, b, a = 1) {
     const color = '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
     let alpha = "";
     if (a === 0) alpha = "00";
     if (a !== 1) {
-        alpha = parseInt(a, 16);
+        alpha = Math.round(Number(a * 255)).toString(16);
+        if (alpha === "0") alpha = "00";
     }
     return color + alpha;
 }
@@ -30,7 +27,6 @@ export function hex2rgba(hex) {
     }
 
     let alpha = "";
-
     if (/^#[a-f0-9]{8}$/i.test(hex)) {
         alpha = parseInt(hex.slice(-2), 16);
         alpha = convertRange(alpha, [0, 255], [0, 1])
@@ -50,7 +46,9 @@ export function hex2rgba(hex) {
 }
 
 export function rgb2hsl(r, g, b, alpha = 1) {
-    (r /= 255), (g /= 255), (b /= 255);
+    r /= 255;
+    g /= 255;
+    b /= 255;
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     let h;

@@ -6,10 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy": "node deploy.js"
   },
   "devDependencies": {
     "sass": "^1.63.6",
     "vite": "^4.4.0"
+  },
+  "dependencies": {
+    "execa": "^8.0.1"
   }
 }

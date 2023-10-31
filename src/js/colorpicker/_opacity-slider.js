@@ -80,17 +80,17 @@ export class OpacitySlider {
         this.onOpacitySelect.emit(opacity);
     }
 
-    setColor(color) {
+    setColor(color, emit = true) {
         this.#color = color;
         this.#setBgGradient();
-        this.setOpacity(color.a);
+        this.setOpacity(color.a, emit);
     }
 
-    setOpacity(opacity) {
+    setOpacity(opacity, emit = true) {
         opacity = normalize(opacity * 100, 100, 0);
         this.#cursorPos.y = Math.round(this.#DOM.canvas.height - this.#DOM.canvas.height * opacity);
         this.#DOM.dragEl.style.top = `${this.#cursorPos.y}px`;
-        this.onOpacitySelect.emit(opacity);
+        if (emit) this.onOpacitySelect.emit(opacity);
     }
 
     getOpacity() {

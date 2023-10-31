@@ -90,7 +90,7 @@ export class HueSlider {
         this.onHueSelect.emit(color);
     }
 
-    setColor(color) {
+    setColor(color, emit = true) {
         const hslColor = rgb2hsl(color.r, color.g, color.b);
 
         const hue = hslColor.h * 360;
@@ -101,7 +101,7 @@ export class HueSlider {
 
         const colorGet = this.getColor();
         this.#DOM.dragEl.style.background = colorGet.rgb;
-        this.onHueSelect.emit(colorGet);
+        if (emit) this.onHueSelect.emit(colorGet);
     }
 
     getColor() {
