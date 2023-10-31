@@ -1,7 +1,6 @@
 import {ColorPicker} from "./colorpicker/colorpicker.js";
-import {convertRange, hex2rgba} from "./colorpicker/_functions.js";
 
-{
+if (1 === 1) {
     const place = document.querySelector("#place1");
     const colorPlace = document.querySelector("#color1");
     const cp = new ColorPicker(place, {
@@ -15,6 +14,7 @@ import {convertRange, hex2rgba} from "./colorpicker/_functions.js";
         console.log(`colorpicker1:`, color);
         colorPlace.style.backgroundColor = `rgba(${color.rgba.r}, ${color.rgba.g}, ${color.rgba.b}, ${color.rgba.a})`;
     });
+
     cp.setColorHEX("#0000fff7")
 }
 
@@ -31,6 +31,7 @@ if (1 === 1) {
         console.log(`colorpicker2:`, color);
         colorPlace.style.backgroundColor = `rgba(${color.rgba.r}, ${color.rgba.g}, ${color.rgba.b}, ${color.rgba.a})`;
     });
+
     cp.setColorObj({r: 255, g: 0, b: 0, a: 0.2});
 }
 
@@ -49,6 +50,7 @@ if (1 === 1) {
     input.onfocus = () => {
         place.classList.add("is-show");
     }
+
     const cp = new ColorPicker(place, {
         libraryID: "kolory",
         libraryVisible: true,
@@ -60,6 +62,7 @@ if (1 === 1) {
         input.value = color.hex;
         inputColor.style.background = `rgba(${color.rgba.r}, ${color.rgba.g}, ${color.rgba.b}, ${color.rgba.a})`;
     });
+    
     cp.setColorObj({r: 0, g: 255, b: 0, a: 1});
 
     input.onkeyup = (e) => {
