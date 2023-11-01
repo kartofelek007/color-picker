@@ -62,7 +62,7 @@ if (1 === 1) {
         input.value = color.hex;
         inputColor.style.background = `rgba(${color.rgba.r}, ${color.rgba.g}, ${color.rgba.b}, ${color.rgba.a})`;
     });
-    
+
     cp.setColorObj({r: 0, g: 255, b: 0, a: 1});
 
     input.onkeyup = (e) => {

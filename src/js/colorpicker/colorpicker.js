@@ -68,13 +68,15 @@ export class ColorPicker {
         this.#DOM.el.classList.add("colorpicker");
         this.#DOM.place.append(this.#DOM.el);
 
+        if (!this.#options.opacityColors) {
+            this.#DOM.el.classList.add("is-no-opacity");
+        }
+
         this.#DOM.hueSlider = new HueSlider(this.#DOM.el);
         this.#DOM.colorSlider = new ColorSlider(this.#DOM.el);
 
         if (this.#options.opacityColors) {
             this.#DOM.opacitySlider = new OpacitySlider(this.#DOM.el);
-        } else {
-            this.#DOM.el.classList.add("is-no-opacity");
         }
 
         //tworzę input

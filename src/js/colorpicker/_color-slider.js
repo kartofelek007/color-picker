@@ -70,9 +70,8 @@ export class ColorSlider {
 
     #drag(e) {
         const g = this.#DOM.canvas.getBoundingClientRect();
-
-        let x = clamp(e.pageX - (g.left + window.scrollX), 0, g.width);
-        let y = clamp(e.pageY - (g.top + window.scrollY), 0, g.height);
+        let x = clamp(e.pageX - (g.left + window.scrollX), 0, this.#DOM.canvas.width);
+        let y = clamp(e.pageY - (g.top + window.scrollY), 0, this.#DOM.canvas.height);
 
         this.#cursorPos.y = Math.abs(y);
         this.#cursorPos.x = Math.abs(x);
