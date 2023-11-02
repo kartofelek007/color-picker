@@ -1,7 +1,7 @@
 export const testColorName = (value) => {
 	for (let el of colors) {
 		if (el.name.toUpperCase() === value.toUpperCase()) {
-			return hex;
+			return el;
 		}
 	}
 	return false;

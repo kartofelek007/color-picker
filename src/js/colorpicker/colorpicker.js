@@ -97,10 +97,10 @@ export class ColorPicker {
             this.#DOM.input.onkeyup = e => {
                 let val = this.#DOM.input.value;
                 if (e.key === "Enter" && val !== "") {
-                    let test = testColorName(val);
-                    if (test) {
-                        this.setColorHEX(`${test}`);
-                        this.#DOM.input[s] = test;
+                    let match = testColorName(val);
+                    if (match) {
+                        this.setColorHEX(`${match.hex}`);
+                        this.#DOM.input[s] = match.hex;
                         return;
                     }
 

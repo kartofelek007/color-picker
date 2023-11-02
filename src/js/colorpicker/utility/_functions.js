@@ -26,7 +26,8 @@ export function hex2rgba(hex) {
         return false;
     }
 
-    let alpha = "";
+    let alpha = 1;
+
     if (/^#[a-f0-9]{8}$/i.test(hex)) {
         alpha = parseInt(hex.slice(-2), 16);
         alpha = convertRange(alpha, [0, 255], [0, 1])
