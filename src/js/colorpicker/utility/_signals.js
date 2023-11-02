@@ -15,3 +15,7 @@ export class Signal {
         this.subscribers.forEach(el => el(data));
     }
 }
+
+export const globalSignals = {
+    colorChange : new Signal()
+}

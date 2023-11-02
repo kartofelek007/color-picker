@@ -1,5 +1,5 @@
-import {Signal} from "./_signals.js";
-import {rgb2hex} from "./_functions.js";
+import {Signal} from "../utility/_signals.js";
+import {rgb2hex} from "../utility/_functions.js";
 
 export class ColorLibrary {
     #libraryID

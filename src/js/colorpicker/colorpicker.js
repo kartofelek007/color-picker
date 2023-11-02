@@ -1,11 +1,12 @@
 import "./css/style.scss";
 
-import {ColorSlider} from "./_color-slider.js";
-import {HueSlider} from "./_hue-slider.js";
-import {convertRange, hex2rgba, rgb2hex, rgb2hsl} from "./_functions.js";
-import {Signal} from "./_signals.js";
-import {ColorLibrary} from "./_color-library.js";
-import {OpacitySlider} from "./_opacity-slider.js";
+import {ColorSlider} from "./parts/_color-slider.js";
+import {HueSlider} from "./parts/_hue-slider.js";
+import {hex2rgba, rgb2hex, rgb2hsl} from "./utility/_functions.js";
+import {Signal} from "./utility/_signals.js";
+import {ColorLibrary} from "./parts/_color-library.js";
+import {OpacitySlider} from "./parts/_opacity-slider.js";
+import {testColorName} from "./utility/_colors.js";
 
 const allPickers = {};
 
@@ -32,12 +33,12 @@ export class ColorPicker {
             }, ...opts
         };
 
-        this.#createElement();
-        this.#updateInputValue();
-        //this.setColorObj(this.#color, false)
+        this.#createElements();
 
         if (allPickers[this.#options.libraryID] === undefined) allPickers[this.#options.libraryID] = [];
         allPickers[this.#options.libraryID].push(this);
+
+        this.#updateInputValue();
     }
 
     #makeColorToEmit() {
@@ -61,50 +62,74 @@ export class ColorPicker {
         }
         const hex = rgb2hex(this.#color.r, this.#color.g, this.#color.b, opacity);
         this.#DOM.input.value = hex.toUpperCase();
+        this.#DOM.inputOpacity.value = opacity;
     }
 
-    #createElement() {
-        this.#DOM.el = document.createElement("div");
-        this.#DOM.el.classList.add("colorpicker");
-        this.#DOM.place.append(this.#DOM.el);
-
-        if (!this.#options.opacityColors) {
-            this.#DOM.el.classList.add("is-no-opacity");
+    #createElements() {
+        const createColorSlider = () => {
+            this.#DOM.colorSlider = new ColorSlider(this.#DOM.el);
+            this.#DOM.colorSlider.onColorSelect.on(color => {
+                if (this.#options.opacityColors) {
+                    color.a = this.#DOM.opacitySlider.getOpacity();
+                } else {
+                    color.a = 1;
+                }
+                this.#color = color;
+                if (this.#options.opacityColors) {
+                    this.#DOM.opacitySlider.setColor(this.#color);
+                }
+                if (this.#options.inputVisible) {
+                    this.#updateInputValue();
+                }
+                this.emitColorSelect();
+            });
         }
+        const createInput = () => {
+            this.#DOM.input = document.createElement("input");
+            this.#DOM.input.classList.add("colorpicker-input");
+            this.#DOM.el.append(this.#DOM.input);
 
-        this.#DOM.hueSlider = new HueSlider(this.#DOM.el);
-        this.#DOM.colorSlider = new ColorSlider(this.#DOM.el);
+            //po wpisaniu koloru do inputa sprawdzam czy jest on w poprawnym formacie
+            //i w razie czego aktualizuję kolor w sliderach
+            const s = Symbol();
+            this.#DOM.input[s] = this.#DOM.input.value;
 
-        if (this.#options.opacityColors) {
+            this.#DOM.input.onkeyup = e => {
+                let val = this.#DOM.input.value;
+                if (e.key === "Enter" && val !== "") {
+                    let test = testColorName(val);
+                    if (test) {
+                        this.setColorHEX(`${test}`);
+                        this.#DOM.input[s] = test;
+                        return;
+                    }
+
+                    if (/^#[a-f0-9]{6}$/i.test(val) || /^#[a-f0-9]{8}$/i.test(val)) {
+                        this.setColorHEX(`${val}`);
+                        this.#DOM.input[s] = val;
+                    } else {
+                        this.#DOM.input.value = this.#DOM.input[s];
+                    }
+                }
+            }
+        }
+        const createHueSlider = () => {
+            this.#DOM.hueSlider = new HueSlider(this.#DOM.el);
+            this.#DOM.hueSlider.onHueSelect.on(color => {
+                this.#DOM.colorSlider.setHue(color);
+                this.onHueSelect.emit(color);
+                this.#color = {...this.#color, ...color};
+                if (this.#options.opacityColors) {
+                    this.#DOM.opacitySlider.setColor(this.#color);
+                }
+                if (this.#options.inputVisible) {
+                    this.#updateInputValue();
+                }
+                this.emitColorSelect();
+            });
+        }
+        const createOpacitySlider = () => {
             this.#DOM.opacitySlider = new OpacitySlider(this.#DOM.el);
-        }
-
-        //tworzę input
-        if (this.#options.inputVisible) {
-            this.#createInput();
-            if (this.#options.opacityColors) {
-                this.#createInputOpacity();
-            }
-        }
-
-        if (this.#options.libraryVisible) {
-            this.#createLibrary();
-        }
-
-        this.#DOM.hueSlider.onHueSelect.on(color => {
-            this.#DOM.colorSlider.setHue(color);
-            this.onHueSelect.emit(color);
-            this.#color = {...this.#color, ...color};
-            if (this.#options.opacityColors) {
-                this.#DOM.opacitySlider.setColor(this.#color);
-            }
-            if (this.#options.inputVisible) {
-                this.#updateInputValue();
-            }
-            this.emitColorSelect();
-        });
-
-        if (this.#options.opacityColors) {
             this.#DOM.opacitySlider.onOpacitySelect.on(opacity => {
                 this.#color.a = opacity;
                 this.onOpacitySelect.emit({color: this.#color, opacity});
@@ -117,85 +142,64 @@ export class ColorPicker {
                 this.emitColorSelect();
             });
         }
+        const createInputOpacity = () => {
+            this.#DOM.inputOpacity = document.createElement("input");
+            this.#DOM.inputOpacity.classList.add("colorpicker-input-opacity");
+            this.#DOM.el.append(this.#DOM.inputOpacity);
 
-        this.#DOM.colorSlider.onColorSelect.on(color => {
-            if (this.#options.opacityColors) {
-                color.a = this.#DOM.opacitySlider.getOpacity();
-            } else {
-                color.a = 1;
-            }
-            this.#color = color;
-            if (this.#options.opacityColors) {
-                this.#DOM.opacitySlider.setColor(this.#color);
-            }
-            if (this.#options.inputVisible) {
-                this.#updateInputValue();
-            }
-            this.emitColorSelect();
-        });
-    }
-
-    #createInput() {
-        this.#DOM.input = document.createElement("input");
-        this.#DOM.input.classList.add("colorpicker-input");
-        this.#DOM.el.append(this.#DOM.input);
-
-        //po wpisaniu koloru do inputa sprawdzam czy jest on w poprawnym formacie
-        //i w razie czego aktualizuję kolor w sliderach
-        const s = Symbol();
-        this.#DOM.input[s] = this.#DOM.input.value;
-
-        this.#DOM.input.oninput = e => {
-            if (/^#[a-f0-9]*$/i.test(this.#DOM.input.value)) {
-                this.#DOM.input[s] = this.#DOM.input.value;
-            } else {
-                this.#DOM.input.value = this.#DOM.input[s];
-            }
-        }
-
-        this.#DOM.input.onkeyup = e => {
-            if (e.key === "Enter") {
-                if (/^#[a-f0-9]{6}$/i.test(this.#DOM.input.value) || /^#[a-f0-9]{8}$/i.test(this.#DOM.input.value)) {
-                    this.setColorHEX(`${this.#DOM.input.value}`);
-                    this.#DOM.input[s] = this.#DOM.input.value;
+            //po wpisaniu koloru do inputa sprawdzam czy jest on w poprawnym formacie
+            //i w razie czego aktualizuję kolor w sliderach
+            this.#DOM.inputOpacity.onkeyup = e => {
+                if (e.key === "Enter") {
+                    const val = this.#DOM.inputOpacity.value;
+                    if (!isNaN(Number(val)) && Number(val) <= 1 && Number(val) >= 0) {
+                        this.#color.a = Number(val);
+                        this.#DOM.opacitySlider.setOpacity(val);
+                        this.#updateInputValue();
+                    }
                 }
             }
         }
-    }
+        const createLibrary = () => {
+            this.#DOM.library = new ColorLibrary(this.#DOM.el, this.#options.libraryID, this.#DOM.colorSlider, this.#color);
+            this.#DOM.library.onColorSelect.on(color => {
+                if (this.#options.inputVisible) this.#DOM.input.value = color;
+                this.setColorHEX(color);
+            });
+            this.#DOM.library.onColorsChange.on(colors => {
+                this.onLibraryColorsChange.emit(colors);
+            });
 
-    #createInputOpacity() {
-        this.#DOM.inputOpacity = document.createElement("input");
-        this.#DOM.inputOpacity.classList.add("colorpicker-input-opacity");
-        this.#DOM.el.append(this.#DOM.inputOpacity);
-
-        //po wpisaniu koloru do inputa sprawdzam czy jest on w poprawnym formacie
-        //i w razie czego aktualizuję kolor w sliderach
-        this.#DOM.inputOpacity.onkeyup = e => {
-            if (e.key === "Enter") {
-                const val = this.#DOM.inputOpacity.value;
-                if (!isNaN(Number(val)) && Number(val) <= 100 && Number(val) >= 0) {
-                    this.#color.a = Number(val);
-                    this.#DOM.opacitySlider.setOpacity(val);
-                    this.#updateInputValue();
-                }
-            }
+            this.#DOM.library.onColorsChange.on(colors => {
+                this.onLibraryColorsChange.emit(colors);
+                allPickers[this.#options.libraryID].forEach(cp => cp.updateLibrary());
+            });
         }
-    }
 
-    #createLibrary() {
-        this.#DOM.library = new ColorLibrary(this.#DOM.el, this.#options.libraryID, this.#DOM.colorSlider, this.#color);
-        this.#DOM.library.onColorSelect.on(color => {
-            if (this.#options.inputVisible) this.#DOM.input.value = color;
-            this.setColorHEX(color);
-        });
-        this.#DOM.library.onColorsChange.on(colors => {
-            this.onLibraryColorsChange.emit(colors);
-        });
+        this.#DOM.el = document.createElement("div");
+        this.#DOM.el.classList.add("colorpicker");
+        this.#DOM.place.append(this.#DOM.el);
+        this.#DOM.el.classList.toggle("is-no-opacity", !this.#options.opacityColors);
 
-        this.#DOM.library.onColorsChange.on(colors => {
-            this.onLibraryColorsChange.emit(colors);
-            allPickers[this.#options.libraryID].forEach(cp => cp.updateLibrary());
-        });
+        //tworzę input
+        if (this.#options.inputVisible) {
+            createInput();
+        }
+
+        if (this.#options.opacityColors && this.#options.inputVisible) {
+            createInputOpacity();
+        }
+
+        if (this.#options.opacityColors) {
+            createOpacitySlider();
+        }
+
+        if (this.#options.libraryVisible) {
+            createLibrary();
+        }
+
+        createHueSlider();
+        createColorSlider();
     }
 
     setColorHEX(color, emit = true) {

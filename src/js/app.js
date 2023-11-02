@@ -53,7 +53,7 @@ if (1 === 1) {
 
     const cp = new ColorPicker(place, {
         libraryID: "kolory",
-        libraryVisible: true,
+        libraryVisible: false,
         inputVisible: false,
     });
 

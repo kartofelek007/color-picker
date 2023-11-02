@@ -1,5 +1,5 @@
-import {clamp, rgb2hex, rgb2hsb} from "./_functions.js";
-import {Signal} from "./_signals.js";
+import {clamp, rgb2hex, rgb2hsb} from "../utility/_functions.js";
+import {Signal} from "../utility/_signals.js";
 
 export class ColorSlider {
     #dragged
@@ -88,6 +88,7 @@ export class ColorSlider {
         this.#DOM.canvas.addEventListener("mousedown", e => {
             this.#dragged = true;
             this.#drag(e);
+            this.#DOM.dragEl.classList.add("is-active");
         });
 
         document.addEventListener("mousemove", e => {
@@ -96,6 +97,7 @@ export class ColorSlider {
 
         document.addEventListener("mouseup", () => {
             this.#dragged = false;
+            this.#DOM.dragEl.classList.remove("is-active");
         });
     }
 
